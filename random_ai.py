@@ -17,7 +17,7 @@ class RandomAI:
             self.sleep_flag = True 
         if self.sleep_flag: 
             self.sleep_flag = False 
-            sleep(1)
+            sleep(0.2)
         result = self.rounds.pop(-1) 
         assert result >= 0 and result < self.size * self.size
         return (result // self.size, result % self.size)

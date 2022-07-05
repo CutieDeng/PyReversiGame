@@ -1,3 +1,5 @@
+from time import sleep
+
 COLOR_NONE = 0 
 
 COLOR_BLACK = -1
@@ -23,6 +25,8 @@ class Rule:
         self.player_index = None 
         self.registers = [] 
         self.game_controller = [] 
+        self.fresh = None 
+        self.delay = 0.05
         self.chess = [COLOR_NONE] * (chess_board_size * chess_board_size) 
     
     def add_player(self, player) -> bool: 
@@ -57,7 +61,7 @@ class Rule:
         else: 
             return None 
 
-    def force_set_index_with_color(self, row, col, color) -> bool: 
+    def force_set_index_with_color(self, row, col, color, advanced=0) -> bool: 
         assert color in COLORS 
 
         if (row < 0 or row >= self.chess_board_size): 
@@ -67,7 +71,7 @@ class Rule:
 
         self.chess[row * self.chess_board_size + col] = color 
         for i in self.registers: 
-            i(row, col, color) 
+            i(row, col, color, advanced=advanced) 
     
     def can_set_index_with_color(self, row, col, color) -> bool: 
         assert color in [COLOR_BLUE, COLOR_ORANGE]
@@ -106,7 +110,7 @@ class Rule:
     def attempt_set_index_with_color(self, row, col, color) -> bool: 
         if not self.can_set_index_with_color(row, col, color): 
             return False 
-        change_indexs = [] 
+        change_indexs = [[]] * 8 
         tmp_indexs = [] 
         for move_strategy in MOVES: 
             tmp_indexs.clear() 
@@ -122,17 +126,28 @@ class Rule:
                 if tmp_color == COLOR_NONE: 
                     break 
                 elif tmp_color == color: 
-                    change_indexs.extend(tmp_indexs)
+                    # change_indexs.extend(tmp_indexs)
+                    assert len(tmp_indexs) < 8
+                    for i, index in enumerate(tmp_indexs): 
+                        change_indexs[i].append(index) 
                     break 
                 else: 
                     tmp_indexs.append((tmp_row, tmp_col))
-        change_indexs.append((row, col)) 
-        for index_to_change in change_indexs: 
-            self.chess[index_to_change[0] * self.chess_board_size + index_to_change[1]] = color 
-            for r in self.registers: 
-                r(index_to_change[0], index_to_change[1], color)
+        # change_indexs.append((row, col)) 
+        for i in range(self.chess_board_size * self.chess_board_size): 
+            if not self.fresh: 
+                break 
+            self.fresh(i // self.chess_board_size, i % self.chess_board_size, self.chess[i]) 
+        self.force_set_index_with_color(row, col, color, advanced=2) 
+        for indexes_to_change in change_indexs: 
+            if self.delay: 
+                sleep(self.delay)
+            for index_to_change in indexes_to_change: 
+                self.chess[index_to_change[0] * self.chess_board_size + index_to_change[1]] = color 
+                for r in self.registers: 
+                    r(index_to_change[0], index_to_change[1], color, advanced=1)
         return True 
-        
+
     def start(self): 
         assert self.player_index is None 
         self.player_index = 0 

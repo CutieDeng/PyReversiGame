@@ -26,7 +26,8 @@ class Rule:
         self.registers = [] 
         self.game_controller = [] 
         self.fresh = None 
-        self.delay = 0.05
+        # self.delay = 0.05
+        self.delay = 0
         self.chess = [COLOR_NONE] * (chess_board_size * chess_board_size) 
     
     def add_player(self, player) -> bool: 
@@ -63,12 +64,10 @@ class Rule:
 
     def force_set_index_with_color(self, row, col, color, advanced=0) -> bool: 
         assert color in COLORS 
-
         if (row < 0 or row >= self.chess_board_size): 
             return False 
         if (col < 0 or col >= self.chess_board_size): 
             return False 
-
         self.chess[row * self.chess_board_size + col] = color 
         for i in self.registers: 
             i(row, col, color, advanced=advanced) 

@@ -1,5 +1,6 @@
 from functools import partial
 import tkinter
+import time
 
 from rule import COLORS, Rule, COLOR_ORANGE, COLOR_BLUE
 import weak_greedy
@@ -7,9 +8,14 @@ import weak_greedy
 from threading import Thread, Semaphore
 
 def set_bg_and_text(bg, text, o): 
-    if o.text_obj is None: 
-        # o.text_obj = o.create_text(option='text')
-        o.text_obj = o.create_text(52.5, 52.5, text='', font=(None, 60))
+    try: 
+        if o.text_obj is None: 
+            # o.text_obj = o.create_text(option='text')
+            o.text_obj = o.create_text(52.5, 52.5, text='', font=(None, 60))
+    except AttributeError: 
+        time.sleep(0.2)
+        set_bg_and_text(bg, text, o) 
+        return 
     o.itemconfigure(o.text_obj, text=text)
     o.config(bg=bg)
     o.update()
@@ -88,19 +94,8 @@ for index in range(CHESS_BOARD_SIZE * CHESS_BOARD_SIZE):
             waiting4index.release() 
         return click_event_handle
 
-    c.bind('<ButtonRelease-1>', click_event_handle_closure(index))
-
-    # c.config(highlightthickness=1.0, highlightcolor="green") 
-
-    # 蓝方
-    # c.config(bg='#1CE1FF')
-
-    # 橙方
-    # c.config(bg='#FF7006')
-
-    # 普通格子
-    # c.config(bg='#DDFF31')
     c.text_obj = None
+    c.bind('<ButtonRelease-1>', click_event_handle_closure(index))
     graph_op['init'](c)
 
     c.grid(column=index % CHESS_BOARD_SIZE, row=index // CHESS_BOARD_SIZE)
@@ -131,10 +126,21 @@ def player_click(chess_board, color):
     return (r, c) 
 
 import random_ai 
+import search_ai
+import alpha_ai
 
-rule.add_player(random_ai.RandomAI(CHESS_BOARD_SIZE).deal)
-rule.add_player(weak_greedy.GreedyAI(CHESS_BOARD_SIZE).deal)
+import matrix 
+
 # rule.add_player(player_click) 
+rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=alpha_ai.evaluate_consider).deal)
+# rule.add_player(player_click) 
+rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=matrix.evaluate4).deal)
+
+# rule.add_player(random_ai.RandomAI(CHESS_BOARD_SIZE).deal)
+# rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE).deal)
+# rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=matrix.evaluate2).deal)
+# rule.add_player(weak_greedy.GreedyAI(CHESS_BOARD_SIZE).deal)
+# rule.add_player(search_ai.SearchAI(CHESS_BOARD_SIZE).deal)
 # rule.add_player(player_click) 
 
 new_thread = Thread(target=rule.start)

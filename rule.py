@@ -1,4 +1,5 @@
 from time import sleep
+import time 
 
 COLOR_NONE = 0 
 
@@ -29,7 +30,8 @@ class Rule:
         # self.delay = 0.05
         self.delay = 0
         self.chess = [COLOR_NONE] * (chess_board_size * chess_board_size) 
-    
+        self.show = True     
+
     def add_player(self, player) -> bool: 
         return self.set_blue_player(player) or self.set_orange_player(player)
     
@@ -69,8 +71,9 @@ class Rule:
         if (col < 0 or col >= self.chess_board_size): 
             return False 
         self.chess[row * self.chess_board_size + col] = color 
-        for i in self.registers: 
-            i(row, col, color, advanced=advanced) 
+        if self.show: 
+            for i in self.registers: 
+                i(row, col, color, advanced=advanced) 
     
     def can_set_index_with_color(self, row, col, color) -> bool: 
         assert color in [COLOR_BLUE, COLOR_ORANGE]
@@ -106,6 +109,12 @@ class Rule:
                     return True  
         return False 
     
+    def flush(self): 
+        for i in range(self.chess_board_size * self.chess_board_size): 
+            if not self.fresh: 
+                break 
+            self.fresh(i // self.chess_board_size, i % self.chess_board_size, self.chess[i]) 
+    
     def attempt_set_index_with_color(self, row, col, color) -> bool: 
         if not self.can_set_index_with_color(row, col, color): 
             return False 
@@ -133,36 +142,33 @@ class Rule:
                 else: 
                     tmp_indexs.append((tmp_row, tmp_col))
         # change_indexs.append((row, col)) 
-        for i in range(self.chess_board_size * self.chess_board_size): 
-            if not self.fresh: 
-                break 
-            self.fresh(i // self.chess_board_size, i % self.chess_board_size, self.chess[i]) 
+        if self.show: 
+            self.flush() 
         self.force_set_index_with_color(row, col, color, advanced=2) 
         for indexes_to_change in change_indexs: 
             if self.delay: 
                 sleep(self.delay)
             for index_to_change in indexes_to_change: 
                 self.chess[index_to_change[0] * self.chess_board_size + index_to_change[1]] = color 
-                for r in self.registers: 
-                    r(index_to_change[0], index_to_change[1], color, advanced=1)
+                if self.show: 
+                    for r in self.registers: 
+                        r(index_to_change[0], index_to_change[1], color, advanced=1)
         return True 
 
     def start(self): 
+        start_p = time.time() 
         assert self.player_index is None 
         self.player_index = 0 
-        for i in self.game_controller: 
-            i(-1)
-
+        if self.show: 
+            for i in self.game_controller: 
+                i(-1)
         assert self.chess_board_size & 1 == 0 
-
         mid_position = self.chess_board_size // 2
         self.force_set_index_with_color(mid_position - 1, mid_position - 1, COLOR_BLUE) 
         self.force_set_index_with_color(mid_position, mid_position - 1, COLOR_ORANGE) 
         self.force_set_index_with_color(mid_position - 1, mid_position, COLOR_ORANGE) 
         self.force_set_index_with_color(mid_position, mid_position, COLOR_BLUE) 
-
         winner = None 
-
         while True: 
             winner = self.get_scores() 
             if winner: 
@@ -175,9 +181,15 @@ class Rule:
                 if not self.attempt_set_index_with_color(result[0], result[1], self.player_index * 2 - 1): 
                     continue 
             self.player_index = self.player_index ^ 1
-            for f in self.game_controller: 
-                f(self.player_index * 2 - 1)
+            if self.show: 
+                for f in self.game_controller: 
+                    f(self.player_index * 2 - 1)
             # print ("切换玩家至{}. ".format("蓝方" if self.player_index == 0 else "橙方"))
+        end_p = time.time() 
+        dura = end_p - start_p 
+        if not self.show: 
+            self.flush()  
+        print (f"The game cost time: {dura}s. ")
         
     def add_controller(self, f): 
         self.game_controller.append(f) 

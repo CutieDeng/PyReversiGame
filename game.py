@@ -131,19 +131,23 @@ import alpha_ai
 
 import matrix 
 
-# rule.add_player(player_click) 
-rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=alpha_ai.evaluate_consider).deal)
-# rule.add_player(player_click) 
-rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=matrix.evaluate4).deal)
+rule.add_player(random_ai.RandomAI(CHESS_BOARD_SIZE).deal)
+rule.add_player(random_ai.RandomAI(CHESS_BOARD_SIZE).deal)
 
-# rule.add_player(random_ai.RandomAI(CHESS_BOARD_SIZE).deal)
+# rule.add_player(player_click) 
+# rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=alpha_ai.evaluate_consider).deal)
+# rule.add_player(player_click) 
+# rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=matrix.evaluate4).deal)
+
 # rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE).deal)
 # rule.add_player(alpha_ai.AlphaAI(CHESS_BOARD_SIZE, eva=matrix.evaluate2).deal)
 # rule.add_player(weak_greedy.GreedyAI(CHESS_BOARD_SIZE).deal)
 # rule.add_player(search_ai.SearchAI(CHESS_BOARD_SIZE).deal)
 # rule.add_player(player_click) 
 
+rule.show = False
 new_thread = Thread(target=rule.start)
+
 new_thread.start()
 
 main_frame.mainloop() 

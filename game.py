@@ -1,3 +1,7 @@
+# import resource, sys
+# resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+# sys.setrecursionlimit(10**6)
+
 from functools import partial
 import tkinter
 import time
@@ -145,9 +149,12 @@ rule.add_player(random_ai.RandomAI(CHESS_BOARD_SIZE).deal)
 # rule.add_player(search_ai.SearchAI(CHESS_BOARD_SIZE).deal)
 # rule.add_player(player_click) 
 
-rule.show = False
+rule.cnt = 500 
+
+
+rule.show = None
 new_thread = Thread(target=rule.start)
 
 new_thread.start()
 
-main_frame.mainloop() 
+# main_frame.mainloop() 

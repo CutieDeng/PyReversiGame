@@ -31,6 +31,7 @@ class Rule:
         self.delay = 0
         self.chess = [COLOR_NONE] * (chess_board_size * chess_board_size) 
         self.show = True     
+        self.counter_for_victory = [0, 0] 
 
     def add_player(self, player) -> bool: 
         return self.set_blue_player(player) or self.set_orange_player(player)
@@ -155,8 +156,9 @@ class Rule:
                         r(index_to_change[0], index_to_change[1], color, advanced=1)
         return True 
 
-    def start(self): 
-        start_p = time.time() 
+    def start(self, start_t = time.time()): 
+        self.chess = [COLOR_NONE] * (self.chess_board_size * self.chess_board_size) 
+        # the first position describes the blue flag, and the opponent is orange. 
         assert self.player_index is None 
         self.player_index = 0 
         if self.show: 
@@ -174,6 +176,10 @@ class Rule:
             if winner: 
                 print ("Game over! ")
                 print (f"蓝方格子数：{winner[0]}, 橙方格子数：{winner[1]}. ")
+                if winner[0] > winner[1]: 
+                    self.counter_for_victory[1] += 1 
+                elif winner[1] > winner[0]: 
+                    self.counter_for_victory[0] += 1 
                 break 
             if self.can_set(2 * self.player_index - 1): 
                 result = self.players[self.player_index](self.chess.copy(), self.player_index * 2 - 1)
@@ -185,11 +191,17 @@ class Rule:
                 for f in self.game_controller: 
                     f(self.player_index * 2 - 1)
             # print ("切换玩家至{}. ".format("蓝方" if self.player_index == 0 else "橙方"))
-        end_p = time.time() 
-        dura = end_p - start_p 
-        if not self.show: 
+        if self.show is None: 
+            if self.cnt > 0: 
+                self.cnt -= 1 
+                self.player_index = None 
+                self.start(start_t)
+            else: 
+                end_p = time.time() 
+                dura = end_p - start_t
+                print (f"测试结束，总时长花费 {dura}s. 蓝方胜利局数：{self.counter_for_victory[0]}, 橙方胜利局数：{self.counter_for_victory[1]}. ")
+        elif not self.show: 
             self.flush()  
-        print (f"The game cost time: {dura}s. ")
         
     def add_controller(self, f): 
         self.game_controller.append(f) 
